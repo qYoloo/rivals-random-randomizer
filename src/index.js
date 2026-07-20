@@ -4,6 +4,9 @@ const path = require('path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { handleButton, handleModal } = require('./interactions/menu');
 
+const http = require('http');
+http.createServer((req, res) => res.end('OK')).listen(process.env.PORT || 3000);
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });

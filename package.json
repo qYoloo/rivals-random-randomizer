@@ -1,0 +1,15 @@
+{
+  "name": "rivals-randomizer-bot",
+  "version": "1.0.0",
+  "description": "Discord bot that randomizes balanced Marvel Rivals team comps",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -7,6 +7,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
   UserSelectMenuBuilder,
+  StringSelectMenuBuilder,
 } = require('discord.js');
 
 const { getGuildState, saveGuildState } = require('../utils/storage');
@@ -28,6 +29,7 @@ const REQUIRES_ROSTER_MEMBERSHIP = new Set([
   'menu:sethero',
   'menu:profile',
   'menu:sessionstats',
+  'menu:exclude',
 ]);
 
 async function ephemeral(interaction, content) {
@@ -75,6 +77,8 @@ async function handleButton(interaction) {
       return handleSessionStats(interaction, state);
     case 'menu:setplayers':
       return handleSetPlayers(interaction, state, storageId);
+    case 'menu:exclude':
+      return handleExcludePlayers(interaction, state, storageId);
     case 'menu:undo':
       return handleUndo(interaction, state, storageId);
     case 'menu:reset':
@@ -357,6 +361,62 @@ async function handleSetPlayers(interaction, state, storageId) {
   collector.on('end', async (collected) => {
     if (collected.size === 0) {
       await interaction.editReply({ content: 'Timed out waiting for a selection. Click **Set Players** again.', components: [] });
+    }
+  });
+}
+
+async function handleExcludePlayers(interaction, state, storageId) {
+  if (!state.players || state.players.length === 0) {
+    await ephemeral(interaction, 'No players set yet. Click `Set Players` first.');
+    return;
+  }
+
+  const options = state.players.map((p) => ({ label: p.name, value: p.id }));
+
+  const row = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('menu:exclude_select')
+      .setPlaceholder('Select player(s) to exclude')
+      .setMinValues(1)
+      .setMaxValues(options.length)
+      .addOptions(options),
+  );
+
+  const reply = await interaction.reply({
+    content: 'Pick who to exclude from the current roster.',
+    components: [row],
+    ephemeral: true,
+    fetchReply: true,
+  });
+
+  const collector = reply.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 60_000,
+    max: 1,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
+
+  collector.on('collect', async (i) => {
+    const excludedIds = new Set(i.values);
+    const excludedPlayers = state.players.filter((p) => excludedIds.has(p.id));
+    const kept = state.players.filter((p) => !excludedIds.has(p.id));
+
+    state.players = kept;
+    saveGuildState(storageId, state);
+
+    const notice = buildSwapNotice(excludedPlayers, []);
+
+    await i.update({
+      content: `${excludedIds.size} player(s) excluded. The main menu has been updated.`,
+      components: [],
+    });
+
+    await interaction.message.edit({ embeds: [buildMenuEmbed(state, notice)], components: buildMenuRows() });
+  });
+
+  collector.on('end', async (collected) => {
+    if (collected.size === 0) {
+      await interaction.editReply({ content: 'Timed out waiting for a selection. Click **Exclude Players** again.', components: [] });
     }
   });
 }

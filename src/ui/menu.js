@@ -55,7 +55,6 @@ function buildMenuRows() {
   );
   const row3 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('menu:setplayers').setLabel('Set Players').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('menu:exclude').setLabel('Exclude Players').setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId('menu:undo').setLabel('Undo Last Round').setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId('menu:reset').setLabel('End Session').setStyle(ButtonStyle.Danger),
   );
